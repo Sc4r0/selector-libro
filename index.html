@@ -17,7 +17,7 @@
         <div class="container m-3">
             <div class="row">
                 <div class="col-12">
-                    <h1>Recuento de libros en la lista: <span id="bookCount">0</span></h1>
+                    <h1>N° de libros en la lista: <span id="bookCount">0</span></h1>
                 </div>
                 <div class="col-12">
                     <h1>Último libro sincronizado:</h1>
@@ -30,7 +30,13 @@
 
             <div class="row mt-2">
                 <div class="col-6 d-flex justify-content-center align-items-center">
-                    <button type="button" class="btn btn-primary" onclick="showRandomBook()">
+                    <button
+                        id="randomBookButton"
+                        type="button"
+                        class="btn btn-primary"
+                        onclick="showRandomBook()"
+                        disabled="true"
+                    >
                         Elegir libro al azar
                     </button>
                 </div>

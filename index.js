@@ -20,6 +20,7 @@ let books = [];
                 books[0].title
             } - ${getBookAuthor(books[0])}`;
             document.getElementById("lastSyncedBookImg").src = getBookCover(books[0]);
+            document.getElementById("randomBookButton").disabled = false;
         });
 })();
 
@@ -35,7 +36,7 @@ function showRandomBook() {
 }
 
 function getBookCover(book) {
-    return book.thumbnail.replace("SY75", "").replace("SX50", "");
+    return book.content.split("src=")[1].split('"')[1].replace("SY75", "").replace("SX50", "");
 }
 
 function getBookAuthor(book) {
