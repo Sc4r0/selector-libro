@@ -2,13 +2,9 @@ img {
     width: 225px;
 }
 
-#goodReadsLink img {
-    width: 150px;
+#goodreadsLink img {
+    width: 200px;
     padding: 5px;
     border: 1px solid #ccc;
     border-radius: 10px;
-}
-
-.hidden {
-    display: none;
 }
