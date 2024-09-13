@@ -8,3 +8,8 @@ img {
     border: 1px solid #ccc;
     border-radius: 10px;
 }
+
+button {
+    border: none;
+    background-color: #fff;
+}
