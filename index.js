@@ -5,6 +5,12 @@ const DEFAULT_BOOK_COUNT = 1000;
 let books = [];
 let rssUrl = localStorage.getItem("rss_url") || "";
 
+function resetApp() {
+    localStorage.removeItem("rss_url");
+    toggleVisibility("random", true);
+    toggleVisibility("enlace", false);
+}
+
 // Utility function for DOM manipulation
 function updateElementById(id, value) {
     document.getElementById(id).innerHTML = value;
@@ -118,10 +124,8 @@ function toggleVisibility(elementId, hide) {
 // IIFE to initialize the app
 (async function init() {
     if (!rssUrl) {
-        console.log("No hay rss_url");
         toggleVisibility("random", true);
     } else {
-        console.log("Sí hay rss_url: " + rssUrl);
         toggleVisibility("enlace", true);
         await fetchBooks(rssUrl);
         showRandomBook();
