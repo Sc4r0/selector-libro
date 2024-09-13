@@ -4,56 +4,65 @@
         <meta charset="UTF-8" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Selección de libro</title>
+        <title>Selección de Libro</title>
         <link rel="shortcut icon" href="favicon.png" type="image/x-icon" />
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous" />
         <link rel="stylesheet" href="style.css" />
     </head>
     <body>
-        <div class="container m-3">
-            <div class="row" id="enlace">
-                <div class="col-12">
-                    <h1>Introduce el enlace de tu lista de libros:</h1>
-                    <input type="url" id="goodReadsListLink" class="form-control" rows="10" placeholder="Por ejemplo: https://www.goodreads.com/review/list/97132972?shelf=to-read" />
-                    <button id="syncButton" type="button" class="btn btn-primary mt-2" onclick="syncList()">Sincronizar libros</button>
+        <div class="container-fluid py-5">
+            <!-- Input Section -->
+            <div class="row justify-content-center mb-4" id="enlace">
+                <div class="col-md-8">
+                    <h2 class="text-center mb-4">Introduce el enlace de tu lista de Goodreads:</h2>
+                    <div class="input-group">
+                        <input type="url" id="goodreadsListLink" class="form-control" placeholder="Introduce el enlace" />
+                        <button id="syncButton" type="button" class="btn btn-primary" onclick="syncList()">Sincronizar libros</button>
+                        <div class="invalid-feedback">Introduce un enlace válido de una lista de Goodreads</div>
+                    </div>
                 </div>
             </div>
 
+            <!-- Book Info Section -->
             <div id="random">
-                <div class="row">
-                    <div class="col-12">
-                        <h1>N° de libros en la lista: <span id="bookCount">0</span></h1>
+                <div class="row justify-content-center">
+                    <div class="col-md-8 text-center">
+                        <h3>Número de libros en la lista: <span id="bookCount">0</span></h3>
                     </div>
-                    <div class="col-12">
-                        <h1>Último libro añadido a la lista:</h1>
-                        <h2 id="lastSyncedBook"></h2>
-                        <img src="" id="lastSyncedBookImg" />
+
+                    <div class="col-md-8 text-center mt-4">
+                        <h4>Último libro añadido a la lista:</h4>
+                        <h5 id="lastSyncedBook"></h5>
+                        <img src="" id="lastSyncedBookImg" class="img-fluid mt-2" alt="Última portada del libro sincronizado" style="max-width: 200px" />
+                    </div>
+                </div>
+
+                <br />
+
+                <!-- Random Book Section -->
+                <div class="row justify-content-center">
+                    <div class="col-md-6 text-center">
+                        <button id="randomBookButton" type="button" class="btn btn-success mb-4" onclick="showRandomBook()" disabled>Elegir libro al azar</button>
                     </div>
                 </div>
 
                 <hr />
 
-                <div class="row mt-2">
-                    <div class="col-6 d-flex justify-content-center align-items-center">
-                        <button id="randomBookButton" type="button" class="btn btn-primary" onclick="showRandomBook()" disabled="true">Elegir libro al azar</button>
-                    </div>
-
-                    <div class="col-6">
-                        <a type="button" class="btn" id="goodReadsLink" href="#">
-                            <img alt="Ver libro en Goodreads" title="Ver libro en Goodreads" src="https://upload.wikimedia.org/wikipedia/commons/1/1a/Goodreads_logo.svg" />
+                <div class="row justify-content-center align-items-center">
+                    <div class="col-md-6 text-center">
+                        <h5 id="randomBook" class="mt-3"></h5>
+                        <img src="" id="bookImg" class="img-fluid mt-3" alt="Portada del libro aleatorio" />
+                        <br />
+                        <a id="goodreadsLink" href="#" class="btn mt-3" target="_blank" title="Ver libro en Goodreads">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/1/1a/Goodreads_logo.svg" alt="Ver libro en Goodreads" class="img-fluid" />
                         </a>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-12">
-                        <h1 id="randomBook"></h1>
-                        <img src="" id="bookImg" />
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Bootstrap and JavaScript -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
+        <script src="index.js"></script>
     </body>
-    <script src="index.js"></script>
 </html>
