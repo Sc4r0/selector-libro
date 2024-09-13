@@ -1,5 +1,6 @@
 const API_URL = "https://api.rss2json.com/v1/api.json?";
 const API_KEY = "vn0imlu2ho24ibtwnbs3ty1ehavriko8wsqs5j6t";
+const DEFAULT_BOOK_COUNT = 1000;
 
 let books = [];
 let rssUrl = localStorage.getItem("rss_url") || "";
@@ -16,6 +17,7 @@ async function fetchBooks(rssUrl) {
             `${API_URL}${new URLSearchParams({
                 rss_url: rssUrl,
                 api_key: API_KEY,
+                count: DEFAULT_BOOK_COUNT,
             })}`
         );
 
