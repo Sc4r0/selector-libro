@@ -6,64 +6,54 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Selección de libro</title>
         <link rel="shortcut icon" href="favicon.png" type="image/x-icon" />
-        <link
-            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
-            rel="stylesheet"
-            integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD"
-            crossorigin="anonymous"
-        />
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous" />
         <link rel="stylesheet" href="style.css" />
     </head>
     <body>
         <div class="container m-3">
-            <div class="row">
+            <div class="row" id="enlace">
                 <div class="col-12">
-                    <h1>N° de libros en la lista: <span id="bookCount">0</span></h1>
-                </div>
-                <div class="col-12">
-                    <h1>Último libro sincronizado:</h1>
-                    <h2 id="lastSyncedBook"></h2>
-                    <img src="" id="lastSyncedBookImg" />
+                    <h1>Introduce el enlace de tu lista de libros:</h1>
+                    <input type="url" id="goodReadsListLink" class="form-control" rows="10" placeholder="Por ejemplo: https://www.goodreads.com/review/list/97132972?shelf=to-read" />
+                    <button id="syncButton" type="button" class="btn btn-primary mt-2" onclick="syncList()">Sincronizar libros</button>
                 </div>
             </div>
 
-            <hr />
-
-            <div class="row mt-2">
-                <div class="col-6 d-flex justify-content-center align-items-center">
-                    <button
-                        id="randomBookButton"
-                        type="button"
-                        class="btn btn-primary"
-                        onclick="showRandomBook()"
-                        disabled="true"
-                    >
-                        Elegir libro al azar
-                    </button>
+            <div id="random">
+                <div class="row">
+                    <div class="col-12">
+                        <h1>N° de libros en la lista: <span id="bookCount">0</span></h1>
+                    </div>
+                    <div class="col-12">
+                        <h1>Último libro añadido a la lista:</h1>
+                        <h2 id="lastSyncedBook"></h2>
+                        <img src="" id="lastSyncedBookImg" />
+                    </div>
                 </div>
 
-                <div class="col-6">
-                    <a type="button" class="btn" id="goodReadsLink" href="#">
-                        <img
-                            alt="Ver libro en Goodreads"
-                            src="https://upload.wikimedia.org/wikipedia/commons/1/1a/Goodreads_logo.svg"
-                        />
-                    </a>
-                </div>
-            </div>
+                <hr />
 
-            <div class="row">
-                <div class="col-12">
-                    <h1 id="randomBook"></h1>
-                    <img src="" id="bookImg" />
+                <div class="row mt-2">
+                    <div class="col-6 d-flex justify-content-center align-items-center">
+                        <button id="randomBookButton" type="button" class="btn btn-primary" onclick="showRandomBook()" disabled="true">Elegir libro al azar</button>
+                    </div>
+
+                    <div class="col-6">
+                        <a type="button" class="btn" id="goodReadsLink" href="#">
+                            <img alt="Ver libro en Goodreads" title="Ver libro en Goodreads" src="https://upload.wikimedia.org/wikipedia/commons/1/1a/Goodreads_logo.svg" />
+                        </a>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <h1 id="randomBook"></h1>
+                        <img src="" id="bookImg" />
+                    </div>
                 </div>
             </div>
         </div>
-        <script
-            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN"
-            crossorigin="anonymous"
-        ></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
     </body>
     <script src="index.js"></script>
 </html>
