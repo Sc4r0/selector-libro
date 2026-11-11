@@ -1,15 +1,21 @@
-img {
+.book-cover {
     width: 225px;
 }
 
-#goodreadsLink img {
+.book-cover-small {
+    max-width: 200px;
+}
+
+.goodreads-logo {
     width: 200px;
     padding: 5px;
     border: 1px solid #ccc;
     border-radius: 10px;
 }
 
-button {
+.icon-button {
     border: none;
-    background-color: #fff;
+    background: transparent;
+    color: inherit;
+    padding: 0;
 }
