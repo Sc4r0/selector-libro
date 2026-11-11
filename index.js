@@ -1,133 +1,293 @@
 const API_URL = "https://api.rss2json.com/v1/api.json?";
 const API_KEY = "vn0imlu2ho24ibtwnbs3ty1ehavriko8wsqs5j6t";
-const DEFAULT_BOOK_COUNT = 1000;
+const PAGE_SIZE = 1000;
+// Safety cap: Goodreads paginates RSS feeds, so we walk pages until one adds nothing new
+const MAX_PAGES = 20;
+const STORAGE_KEY = "rss_url";
+
+// Accepts shelf links such as https://www.goodreads.com/review/list/12345-name?shelf=to-read
+// (http, www., m. and the already-converted /list_rss/ form are all allowed)
+const SHELF_REGEX = /^https?:\/\/(www\.|m\.)?goodreads\.com\/review\/list(_rss)?\/\d+/i;
 
 let books = [];
-let rssUrl = localStorage.getItem("rss_url") || "";
+let currentBook = null;
+let rssUrl = readStoredUrl();
 
-function resetApp() {
-    localStorage.removeItem("rss_url");
+const $ = (id) => document.getElementById(id);
+
+// ---------- Storage ----------
+
+function readStoredUrl() {
+    try {
+        return localStorage.getItem(STORAGE_KEY) || "";
+    } catch {
+        return "";
+    }
+}
+
+function writeStoredUrl(value) {
+    try {
+        if (value) localStorage.setItem(STORAGE_KEY, value);
+        else localStorage.removeItem(STORAGE_KEY);
+    } catch {
+        // Storage unavailable (private mode, blocked cookies): the app still works for this session
+    }
+}
+
+// ---------- UI helpers ----------
+
+function toggleVisibility(elementId, hide) {
+    $(elementId).classList.toggle("d-none", hide);
+}
+
+function showInputView() {
     toggleVisibility("random", true);
     toggleVisibility("enlace", false);
 }
 
-// Utility function for DOM manipulation
-function updateElementById(id, value) {
-    document.getElementById(id).innerHTML = value;
+function showBooksView() {
+    toggleVisibility("enlace", true);
+    toggleVisibility("random", false);
 }
 
-// Async fetch function with error handling
-async function fetchBooks(rssUrl) {
-    try {
-        const response = await fetch(
-            `${API_URL}${new URLSearchParams({
-                rss_url: rssUrl,
-                api_key: API_KEY,
-                count: DEFAULT_BOOK_COUNT,
-            })}`
-        );
-
-        const data = await response.json();
-        if (!data.items || data.items.length === 0) {
-            throw new Error("No books found.");
-        }
-
-        localStorage.setItem("rss_url", rssUrl);
-        books = data.items;
-
-        displayBookCount();
-        displayLastSyncedBook(books[0]);
-        enableRandomButton();
-    } catch (error) {
-        console.error("Error fetching books:", error.message);
+function setImage(id, src) {
+    const img = $(id);
+    if (src) {
+        img.src = src;
+        img.classList.remove("d-none");
+    } else {
+        img.removeAttribute("src");
+        img.classList.add("d-none");
     }
 }
 
-function displayBookCount() {
-    updateElementById("bookCount", books.length);
+function setLoading(isLoading) {
+    const button = $("syncButton");
+    button.disabled = isLoading;
+    $("syncSpinner").classList.toggle("d-none", !isLoading);
+    $("syncLabel").textContent = isLoading ? "Sincronizando…" : "Sincronizar libros";
+    $("goodreadsListLink").disabled = isLoading;
 }
 
-function displayLastSyncedBook(book) {
-    const { title } = book;
-    const author = getBookAuthor(book);
-    const coverImage = getBookCover(book);
-
-    updateElementById("lastSyncedBook", `${title} - ${author}`);
-    document.getElementById("lastSyncedBookImg").src = coverImage;
+function showError(message) {
+    $("goodreadsListLink").classList.add("is-invalid");
+    $("linkFeedback").textContent = message;
 }
 
-function enableRandomButton() {
-    document.getElementById("randomBookButton").disabled = false;
+function clearError() {
+    $("goodreadsListLink").classList.remove("is-invalid");
 }
 
-function showRandomBook() {
-    const randomBook = books[Math.floor(Math.random() * books.length)];
-    const { title } = randomBook;
-    const author = getBookAuthor(randomBook);
-    const coverImage = getBookCover(randomBook);
-    const goodreadsLink = getGoodreadsLink(randomBook);
-
-    updateElementById("randomBook", `${title} - ${author}`);
-    document.getElementById("bookImg").src = coverImage;
-    document.getElementById("goodreadsLink").href = goodreadsLink;
+function clearBookDisplay() {
+    books = [];
+    currentBook = null;
+    $("bookCount").textContent = "0";
+    $("lastSyncedBook").textContent = "";
+    $("randomBook").textContent = "";
+    setImage("lastSyncedBookImg", "");
+    setImage("bookImg", "");
+    $("goodreadsLink").classList.add("d-none");
+    $("randomBookButton").disabled = true;
 }
 
-// Extract book details with better readability
+// ---------- Book parsing ----------
+
+function parseHtml(html) {
+    return new DOMParser().parseFromString(html || "", "text/html");
+}
+
 function getBookCover(book) {
-    return book.content
-        .split('src="')[1]
-        .split('"')[0]
-        .replace(/(SY75|SX50)/g, "");
+    const src = parseHtml(book.content || book.description).querySelector("img")?.getAttribute("src") || book.thumbnail || "";
+    // Strip Goodreads size suffixes like "._SY75_." / "._SX50_." to get the full-size cover
+    return src.replace(/\._S[XY]\d+_\./, ".");
 }
 
 function getBookAuthor(book) {
-    return book.description.split("author: ")[1].split("<br>")[0];
+    const match = /author:\s*([^<]+)/i.exec(book.description || "");
+    // Decode HTML entities (e.g. &amp;) via textContent
+    return match ? parseHtml(match[1]).body.textContent.trim() : "Autor desconocido";
 }
 
 function getGoodreadsLink(book) {
-    return book.description.split('href="')[1].split('"')[0];
+    return parseHtml(book.description).querySelector("a[href]")?.getAttribute("href") || book.link || "";
 }
 
-// Sync list from user input and handle edge cases
-async function syncList() {
-    let goodreadsListLink = document.getElementById("goodreadsListLink").value;
-    const goodreadsRegex = /^https:\/\/(www\.)?goodreads\.com\/.*$/;
+function getBookTitle(book) {
+    return parseHtml(book.title).body.textContent.trim() || "Sin título";
+}
 
-    if (goodreadsListLink === "" || !goodreadsRegex.test(goodreadsListLink)) {
-        document.getElementById("goodreadsListLink").classList.add("is-invalid");
-        return;
-    } else {
-        document.getElementById("goodreadsListLink").classList.remove("is-invalid");
+function describeBook(book) {
+    return `${getBookTitle(book)} - ${getBookAuthor(book)}`;
+}
+
+// ---------- Fetching ----------
+
+function buildPageUrl(feedUrl, page) {
+    const url = new URL(feedUrl);
+    if (page > 1) url.searchParams.set("page", page);
+    else url.searchParams.delete("page");
+    return url.toString();
+}
+
+async function fetchPage(feedUrl) {
+    const response = await fetch(
+        `${API_URL}${new URLSearchParams({
+            rss_url: feedUrl,
+            api_key: API_KEY,
+            count: PAGE_SIZE,
+        })}`
+    );
+
+    let data;
+    try {
+        data = await response.json();
+    } catch {
+        throw new Error(`Error del servidor (${response.status}).`);
     }
 
-    // If the URL includes "/list/", replace it with "/list_rss/" for the API
-    if (goodreadsListLink !== "") {
-        if (goodreadsListLink.includes("/list/")) {
-            goodreadsListLink = goodreadsListLink.replace("/list/", "/list_rss/");
+    if (!response.ok || data.status !== "ok") {
+        throw new Error(data?.message || `Error del servidor (${response.status}).`);
+    }
+    return data.items || [];
+}
+
+// Returns all books of the feed, following Goodreads pagination. Throws on failure.
+async function fetchAllBooks(feedUrl) {
+    const all = [];
+    const seen = new Set();
+
+    for (let page = 1; page <= MAX_PAGES; page++) {
+        let items;
+        try {
+            items = await fetchPage(buildPageUrl(feedUrl, page));
+        } catch (error) {
+            // A failing later page shouldn't throw away what we already have
+            if (page > 1) break;
+            throw error;
         }
-        rssUrl = goodreadsListLink;
+
+        let added = 0;
+        for (const item of items) {
+            const key = item.guid || item.link || item.title;
+            if (!seen.has(key)) {
+                seen.add(key);
+                all.push(item);
+                added++;
+            }
+        }
+        // Empty page, or the feed ignored ?page= and returned the same items again
+        if (added === 0) break;
     }
 
-    await fetchBooks(rssUrl);
-    showRandomBook();
-
-    // Hide the input section and show the book info section
-    toggleVisibility("random", false);
-    toggleVisibility("enlace", true);
+    if (all.length === 0) {
+        throw new Error("No se encontraron libros en esta lista.");
+    }
+    return all;
 }
 
-// Toggles visibility of elements
-function toggleVisibility(elementId, hide) {
-    document.getElementById(elementId).classList.toggle("d-none", hide);
-}
+// Loads the feed into the UI. Returns true on success.
+async function loadBooks(feedUrl) {
+    setLoading(true);
+    clearError();
+    try {
+        const items = await fetchAllBooks(feedUrl);
+        books = items;
+        rssUrl = feedUrl;
+        writeStoredUrl(feedUrl);
 
-// IIFE to initialize the app
-(async function init() {
-    if (!rssUrl) {
-        toggleVisibility("random", true);
-    } else {
-        toggleVisibility("enlace", true);
-        await fetchBooks(rssUrl);
+        $("bookCount").textContent = books.length;
+        displayLastSyncedBook(books[0]);
+        $("randomBookButton").disabled = false;
         showRandomBook();
+        return true;
+    } catch (error) {
+        console.error("Error fetching books:", error);
+        showError(`No se pudo cargar la lista: ${error.message}`);
+        return false;
+    } finally {
+        setLoading(false);
+    }
+}
+
+// ---------- Display ----------
+
+function displayLastSyncedBook(book) {
+    $("lastSyncedBook").textContent = describeBook(book);
+    setImage("lastSyncedBookImg", getBookCover(book));
+}
+
+function showRandomBook() {
+    if (books.length === 0) return;
+
+    let randomBook;
+    do {
+        randomBook = books[Math.floor(Math.random() * books.length)];
+    } while (books.length > 1 && randomBook === currentBook);
+    currentBook = randomBook;
+
+    $("randomBook").textContent = describeBook(randomBook);
+    setImage("bookImg", getBookCover(randomBook));
+
+    const link = getGoodreadsLink(randomBook);
+    const linkEl = $("goodreadsLink");
+    if (link) {
+        linkEl.href = link;
+        linkEl.classList.remove("d-none");
+    } else {
+        linkEl.classList.add("d-none");
+    }
+}
+
+// ---------- Actions ----------
+
+function toRssUrl(link) {
+    const url = new URL(link);
+    url.protocol = "https:";
+    url.hostname = "www.goodreads.com";
+    url.pathname = url.pathname.replace("/review/list/", "/review/list_rss/");
+    return url.toString();
+}
+
+async function syncList(event) {
+    event?.preventDefault();
+
+    const link = $("goodreadsListLink").value.trim();
+    if (!SHELF_REGEX.test(link)) {
+        showError("Introduce un enlace válido de una estantería de Goodreads (p. ej. https://www.goodreads.com/review/list/12345?shelf=to-read).");
+        return;
+    }
+
+    if (await loadBooks(toRssUrl(link))) {
+        showBooksView();
+    }
+}
+
+function resetApp() {
+    writeStoredUrl("");
+    rssUrl = "";
+    clearBookDisplay();
+    clearError();
+    $("goodreadsListLink").value = "";
+    showInputView();
+    $("goodreadsListLink").focus();
+}
+
+// ---------- Init ----------
+
+(async function init() {
+    $("syncForm").addEventListener("submit", syncList);
+    $("randomBookButton").addEventListener("click", showRandomBook);
+    $("backButton").addEventListener("click", resetApp);
+
+    if (!rssUrl) {
+        showInputView();
+        return;
+    }
+
+    // Show the saved link in the input in case loading fails and the user needs to retry
+    $("goodreadsListLink").value = rssUrl.replace("/review/list_rss/", "/review/list/");
+    showInputView();
+    if (await loadBooks(rssUrl)) {
+        showBooksView();
     }
 })();
