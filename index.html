@@ -9,8 +9,8 @@
         <link rel="stylesheet" href="style.css" />
     </head>
     <body>
-        <!-- Goodreads' widget script writes its HTML into this element. A <template> keeps it inert (no images are fetched). -->
-        <template id="gr_custom_widget_selector"></template>
+        <!-- Goodreads' widget script writes its HTML into #gr_custom_widget_. A <template> keeps it inert (no images are fetched). -->
+        <template id="gr_custom_widget_"></template>
 
         <div class="container py-5">
             <!-- Input Section (both sections start hidden; index.js decides which to show) -->
@@ -22,19 +22,19 @@
                     <!-- Method picker -->
                     <div class="row g-3 mb-4" role="tablist" aria-label="Forma de cargar la lista">
                         <div class="col-md-6">
-                            <button type="button" class="method-card w-100 text-start" role="tab" id="tab-link" data-method="link" aria-controls="panel-link" aria-selected="true">
+                            <button type="button" class="method-card w-100 text-start" role="tab" id="tab-link" data-method="link" aria-controls="panel-link" aria-selected="false">
                                 <span class="method-step-badge">1</span>
                                 <strong class="d-block fs-5 mt-2">Pegar el enlace de tu estantería</strong>
                                 <span class="d-block small text-body-secondary mt-1">Lo más rápido: 30 segundos. Se actualiza solo cada vez que abres la página.</span>
-                                <span class="badge text-bg-warning mt-2">Solo los 100 libros añadidos más recientemente</span>
+                                <span class="badge text-bg-warning mt-2">Puede mostrar solo parte de la lista</span>
                             </button>
                         </div>
                         <div class="col-md-6">
-                            <button type="button" class="method-card w-100 text-start" role="tab" id="tab-csv" data-method="csv" aria-controls="panel-csv" aria-selected="false">
+                            <button type="button" class="method-card w-100 text-start" role="tab" id="tab-csv" data-method="csv" aria-controls="panel-csv" aria-selected="true">
                                 <span class="method-step-badge">2</span>
                                 <strong class="d-block fs-5 mt-2">Subir tu exportación de Goodreads (CSV)</strong>
-                                <span class="d-block small text-body-secondary mt-1">Unos minutos. Incluye toda la lista, sin límite de libros.</span>
-                                <span class="badge text-bg-info mt-2">Hay que volver a subirla cuando cambie la lista</span>
+                                <span class="d-block small text-body-secondary mt-1">Unos minutos. Incluye toda la lista, sin límite de libros. Hay que volver a subirla cuando cambie la lista.</span>
+                                <span class="badge text-bg-success mt-2">Recomendado</span>
                             </button>
                         </div>
                     </div>
@@ -42,6 +42,9 @@
                     <!-- Method 1: shelf link -->
                     <section id="panel-link" class="method-panel" role="tabpanel" aria-labelledby="tab-link">
                         <h2 class="h4">Opción 1 · Pegar el enlace de tu estantería</h2>
+                        <div class="alert alert-warning small">
+                            <strong>Ojo:</strong> Goodreads ya no ofrece una forma pública de leer una estantería completa. Este método usa su widget público, que devuelve <strong>solo una parte de tus libros</strong> (según el perfil, de 10 a 100) y <strong>no siempre respeta la estantería elegida</strong>. Para elegir de verdad entre toda tu lista «Want to Read», usa la <button type="button" class="btn btn-link btn-sm p-0 align-baseline" data-goto="csv">opción 2 (CSV)</button>.
+                        </div>
                         <ol class="steps">
                             <li>
                                 Abre <a href="https://www.goodreads.com/review/list?shelf=to-read" target="_blank" rel="noopener noreferrer">tu estantería «Want to Read» en Goodreads</a> desde un navegador (no desde la app del móvil) e inicia sesión si te lo pide.
@@ -78,8 +81,7 @@
                             <ul class="mt-2 mb-0">
                                 <li><strong>«No se encontraron libros» o «perfil no válido»:</strong> tu perfil tiene que ser visible. En Goodreads ve a <a href="https://www.goodreads.com/user/edit?tab=settings" target="_blank" rel="noopener noreferrer">Settings → Settings</a> y en <em>Privacy</em> elige que cualquiera pueda ver tu perfil (<em>anyone, including search engines</em> o <em>Goodreads members</em>).</li>
                                 <li><strong>«No se pudo contactar con Goodreads»:</strong> algunos bloqueadores de anuncios o de rastreo bloquean <code>goodreads.com</code>. Desactívalo para esta página y vuelve a intentarlo.</li>
-                                <li><strong>Tu lista tiene más de 100 libros:</strong> Goodreads solo deja leer los 100 más recientes de esta forma. Usa la <button type="button" class="btn btn-link p-0 align-baseline" data-goto="csv">opción 2 (CSV)</button> para tenerlos todos.</li>
-                                <li><strong>El nombre de la estantería tiene que coincidir:</strong> si escribes mal <code>?shelf=…</code>, Goodreads puede devolver otros libros. Copia el enlace tal cual desde la estantería.</li>
+                                <li><strong>Faltan libros o aparecen libros de otra estantería:</strong> es una limitación del widget de Goodreads, no se puede evitar desde aquí. Usa la <button type="button" class="btn btn-link p-0 align-baseline" data-goto="csv">opción 2 (CSV)</button> para tener exactamente tu estantería.</li>
                             </ul>
                         </details>
                     </section>
@@ -159,8 +161,8 @@
                         <h3>Número de libros en la lista: <span id="bookCount">0</span></h3>
                         <p id="sourceInfo" class="text-body-secondary small mb-0"></p>
                         <div id="limitNotice" class="alert alert-warning small mt-3 d-none" role="status">
-                            Goodreads solo deja leer los <strong>100 libros añadidos más recientemente</strong> a partir del enlace, así que puede que falten los más antiguos.
-                            Para elegir entre todos, <button type="button" class="btn btn-link btn-sm p-0 align-baseline" data-goto="csv">sube tu exportación CSV</button>.
+                            Con el enlace, Goodreads solo deja leer <strong>una parte de tus libros</strong> y no siempre de la estantería elegida, así que puede que falten libros o que sobre alguno.
+                            Para elegir entre toda tu lista, <button type="button" class="btn btn-link btn-sm p-0 align-baseline" data-goto="csv">sube tu exportación CSV</button>.
                         </div>
                     </div>
 

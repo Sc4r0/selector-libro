@@ -1,10 +1,13 @@
 // Goodreads retired shelf RSS feeds (list_rss) in late 2026. Two sources remain:
-//  1. The public shelf widget: a <script> that needs no login or CORS, but returns at most 100 books.
+//  1. The public shelf widget: a <script> that needs no login or CORS, but returns a fixed subset of the
+//     profile (10–100 books seen) and ignores ?shelf= and ?num_books=. Best effort only.
 //  2. The "Export Library" CSV: the whole library, uploaded by the user and parsed locally.
 
 const WIDGET_URL = "https://www.goodreads.com/review/custom_widget/";
-const WIDGET_ID = "selector"; // the widget writes into #gr_custom_widget_<WIDGET_ID>
-const WIDGET_MAX_BOOKS = 100; // Goodreads ignores larger values and ?page=
+// Don't pass widget_id: Goodreads then suffixes every class name with it AND returns different (fewer) books.
+// Without it the widget writes into #gr_custom_widget_.
+const WIDGET_TARGET_ID = "gr_custom_widget_";
+const WIDGET_MAX_BOOKS = 100;
 const WIDGET_TIMEOUT_MS = 15000;
 const DEFAULT_SHELF = "to-read";
 
@@ -154,10 +157,10 @@ function parseShelfLink(input) {
 }
 
 // Loads the widget script and returns its HTML. The script assigns `var widget_code = '…'`
-// and puts it into #gr_custom_widget_<id>, which is a <template> so nothing gets rendered.
+// and puts it into #gr_custom_widget_, which is a <template> so nothing gets rendered.
 function fetchWidgetHtml(userId, shelf) {
     return new Promise((resolve, reject) => {
-        const target = $(`gr_custom_widget_${WIDGET_ID}`);
+        const target = $(WIDGET_TARGET_ID);
         target.innerHTML = "";
         window.widget_code = undefined;
 
@@ -165,9 +168,6 @@ function fetchWidgetHtml(userId, shelf) {
         const params = new URLSearchParams({
             shelf,
             num_books: WIDGET_MAX_BOOKS,
-            sort: "date_added",
-            order: "d",
-            widget_id: WIDGET_ID,
             _: Date.now(), // avoid a stale cached copy
         });
         script.src = `${WIDGET_URL}${encodeURIComponent(userId)}?${params}`;
@@ -201,12 +201,14 @@ function cleanGoodreadsUrl(href) {
 
 function parseWidgetBooks(html) {
     const doc = new DOMParser().parseFromString(html, "text/html");
-    return [...doc.querySelectorAll(".gr_custom_each_container_")].map((item) => {
-        const titleLink = item.querySelector(".gr_custom_title_ a");
-        const cover = item.querySelector(".gr_custom_book_container_ img")?.getAttribute("src") || "";
+    // Match class prefixes: Goodreads appends the widget id (if any) to every class name
+    const part = (name) => `[class^="gr_custom_${name}_"]`;
+    return [...doc.querySelectorAll(part("each_container"))].map((item) => {
+        const titleLink = item.querySelector(`${part("title")} a`);
+        const cover = item.querySelector(`${part("book_container")} img`)?.getAttribute("src") || "";
         return {
             title: titleLink?.textContent.trim() || "Sin título",
-            author: item.querySelector(".gr_custom_author_ a")?.textContent.trim() || "Autor desconocido",
+            author: item.querySelector(`${part("author")} a`)?.textContent.trim() || "Autor desconocido",
             // Strip Goodreads size suffixes like "._SY75_." to get the full-size cover
             cover: cover.replace(/\._S[XY]\d+_\./, "."),
             link: cleanGoodreadsUrl(titleLink?.getAttribute("href") || ""),
@@ -221,7 +223,7 @@ async function fetchWidgetBooks({ userId, shelf }) {
     }
     const result = parseWidgetBooks(html);
     if (result.length === 0) {
-        throw new Error(`No se encontraron libros en la estantería «${shelf}». Comprueba que tenga libros y que tu perfil sea público.`);
+        throw new Error(`Goodreads no devolvió ningún libro para este perfil. Comprueba que tu perfil sea público o usa la opción 2 (CSV).`);
     }
     return result;
 }
@@ -435,7 +437,7 @@ function describeSource(source) {
         const date = new Date(source.importedAt).toLocaleDateString("es-ES");
         return `${shelf}, importada de ${source.fileName || "un CSV"} el ${date}. Para actualizarla, exporta de nuevo y vuelve a subirla.`;
     }
-    return `Estantería «${shelfLabel(source.shelf)}» de Goodreads, cargada desde el enlace. Se actualiza cada vez que abres la página.`;
+    return `Libros del perfil de Goodreads ${source.userId}, cargados desde el enlace. Se actualiza cada vez que abres la página.`;
 }
 
 function showBooks(list, source) {
@@ -443,7 +445,7 @@ function showBooks(list, source) {
     currentBook = null;
     $("bookCount").textContent = books.length;
     $("sourceInfo").textContent = describeSource(source);
-    toggleVisibility("limitNotice", !(source.type === "link" && books.length >= WIDGET_MAX_BOOKS));
+    toggleVisibility("limitNotice", source.type !== "link");
     displayLastSyncedBook(books[0]);
     $("randomBookButton").disabled = false;
     showRandomBook();
@@ -477,7 +479,7 @@ function showRandomBook() {
 
 // ---------- Actions ----------
 
-function resetApp(method = "link") {
+function resetApp(method = "csv") {
     writeStoredSource(null);
     clearBookDisplay();
     clearErrors();
@@ -521,7 +523,7 @@ function resetApp(method = "link") {
         return;
     }
 
-    selectMethod("link");
+    selectMethod(source?.type === "link" ? "link" : "csv");
     showInputView();
     if (source?.type === "link") {
         // Show the saved shelf in the input in case loading fails and the user needs to retry
