@@ -19,3 +19,186 @@
     color: inherit;
     padding: 0;
 }
+
+/* ---------- Method picker ---------- */
+
+.method-card {
+    height: 100%;
+    padding: 1rem 1.25rem;
+    border: 2px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+    background: var(--bs-body-bg);
+    color: inherit;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.method-card:hover {
+    border-color: var(--bs-primary-border-subtle);
+}
+
+.method-card[aria-selected="true"] {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.15);
+}
+
+.method-step-badge {
+    display: inline-grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    background: var(--bs-secondary-bg);
+    font-weight: 600;
+}
+
+.method-card[aria-selected="true"] .method-step-badge {
+    background: var(--bs-primary);
+    color: #fff;
+}
+
+.method-panel {
+    padding: 1.5rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+    background: var(--bs-tertiary-bg);
+}
+
+.steps > li {
+    margin-bottom: 0.75rem;
+}
+
+.help-box summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.help-box li {
+    margin-bottom: 0.4rem;
+}
+
+/* ---------- Illustrations (drawn in CSS, not real screenshots) ---------- */
+
+.mock {
+    max-width: 100%;
+    margin-bottom: 0;
+}
+
+.mock figcaption {
+    margin-top: 0.4rem;
+    font-size: 0.85rem;
+    color: var(--bs-secondary-color);
+}
+
+.mock mark {
+    padding: 0 0.15em;
+    border-radius: 0.2em;
+    background: #fff3a3;
+}
+
+.mock-browser {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.5rem;
+    background: var(--bs-body-bg);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.mock-dots {
+    display: flex;
+    gap: 0.3rem;
+    flex: none;
+}
+
+.mock-dots i {
+    width: 0.65rem;
+    height: 0.65rem;
+    border-radius: 50%;
+    background: #ff5f57;
+}
+
+.mock-dots i:nth-child(2) {
+    background: #febc2e;
+}
+
+.mock-dots i:nth-child(3) {
+    background: #28c840;
+}
+
+.mock-url {
+    flex: 1;
+    min-width: 0;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    background: var(--bs-secondary-bg);
+    font-family: var(--bs-font-monospace);
+    font-size: 0.8rem;
+    overflow-wrap: anywhere;
+}
+
+.mock-page {
+    max-width: 26rem;
+    padding: 1rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.5rem;
+    background: #f4f1ea;
+    color: #333;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    font-family: Georgia, serif;
+}
+
+.mock-heading {
+    margin-bottom: 0.5rem;
+    color: #382110;
+    font-weight: 700;
+}
+
+.mock-button {
+    display: inline-block;
+    padding: 0.3rem 0.8rem;
+    border: 1px solid #d6d0c4;
+    border-radius: 0.25rem;
+    background: #fff;
+    font-family: system-ui, sans-serif;
+    font-size: 0.85rem;
+    outline: 3px solid #fff3a3;
+}
+
+.mock-note {
+    margin-top: 0.5rem;
+    color: #767676;
+    font-size: 0.8rem;
+}
+
+.mock-link {
+    margin-top: 0.4rem;
+    color: #00635d;
+    font-size: 0.9rem;
+}
+
+/* ---------- CSV drop zone ---------- */
+
+.drop-zone {
+    display: block;
+    padding: 1.5rem 1rem;
+    border: 2px dashed var(--bs-border-color);
+    border-radius: 0.75rem;
+    background: var(--bs-body-bg);
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s, background-color 0.15s;
+}
+
+.drop-zone:hover,
+.drop-zone.is-dragging,
+#csvFile:focus-visible + .drop-zone,
+.drop-zone:focus-within {
+    border-color: var(--bs-primary);
+    background: var(--bs-primary-bg-subtle);
+}
+
+.drop-zone.is-invalid {
+    border-color: var(--bs-danger);
+}
